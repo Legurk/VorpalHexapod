@@ -119,10 +119,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //    detect and correct even Scratch programs that would overstress the servos. The method implemented in this release
 //    will not be able to correct for an errant scratch program that triggers this situation.
 
-#include <Wire.h>
+//#include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
-#include <SoftwareSerial.h>
-#include <SPI.h>
+//#include <SoftwareSerial.h>
+//#include <SPI.h>
 //#include <Pixy.h>
 #include <EEPROM.h>
 
@@ -147,13 +147,13 @@ byte SomeLegsUp = 0;  // this is a flag to detect situations where a user rapidl
 #define SERVO_IIC_ADDR  (0x40)    // default servo driver IIC address
 Adafruit_PWMServoDriver servoDriver = Adafruit_PWMServoDriver(SERVO_IIC_ADDR); 
 
-#define BeeperPin 4           // digital 4 used for beeper
+//#define BeeperPin 4           // digital 4 used for beeper
 #define ServoTypePin 5        // 5 is used to signal digital vs. analog servo mode
-#define ServoTypeGroundPin 6  // 6 provides a ground to pull 5 low if digital servos are in use
-#define GripElbowCurrentPin A6  // current sensor for grip arm elbow servo, only used if GRIPARM mode
-#define GripClawCurrentPin  A7  // current sensor for grip claw servo, only used if GRIPARM mode
-#define BF_ERROR  100         // deep beep for error situations
-#define BD_MED    50          // medium long beep duration
+//#define ServoTypeGroundPin 6  // 6 provides a ground to pull 5 low if digital servos are in use
+//#define GripElbowCurrentPin A6  // current sensor for grip arm elbow servo, only used if GRIPARM mode
+//#define GripClawCurrentPin  A7  // current sensor for grip claw servo, only used if GRIPARM mode
+//#define BF_ERROR  100         // deep beep for error situations
+//#define BD_MED    50          // medium long beep duration
 
 // Depending on your servo make, the pulse width min and max may vary, you 
 // want these to be as small/large as possible without hitting the hard stop
@@ -308,18 +308,6 @@ unsigned long LastValidReceiveTime = 0;  // last time we got a completely valid 
 int Dialmode;   // What's the robot potentiometer set to?
 
 #define NUM_GRIPSERVOS ((Dialmode == DIALMODE_RC_GRIPARM)?2:0)  // if we're in griparm mode there are 2 griparm servos, else there are none
-
-void beep(int f, int t) {
-  if (f > 0 && t > 0) {
-    tone(BeeperPin, f, t);
-  } else {
-    noTone(BeeperPin);
-  }
-}
-
-void beep(int f) {  // if no second param is given we'll default to 250 milliseconds for the beep
-  beep(f, 250);
-}
 
 ///////////////////////////////////////////////////////////////
 // Trim functions
@@ -1530,75 +1518,26 @@ void resetServoDriver() {
 }
 
 void setup() {
-  Serial.begin(9600);
-  Serial.println("");
-  Serial.println(Version);
-  pinMode(BeeperPin, OUTPUT);
-  beep(200);
+  //Serial.begin(9600);
+  //Serial.println("");
+  //Serial.println(Version);
 
   // read in trim values from eeprom if available
   if (EEPROM.read(0) == 'V') {
     // if the first byte in the eeprom is a capital letter V that means there are trim values
     // available. Note that eeprom from the factory is set to all 255 values.
-    Serial.print("TRIMS: ");
+    //Serial.print("TRIMS: ");
     for (int i = 0; i < NUM_LEGS*2; i++) {
       ServoTrim[i] = EEPROM.read(i+1);
-      Serial.print(ServoTrim[i]-TRIM_ZERO); Serial.print(" ");
+      //Serial.print(ServoTrim[i]-TRIM_ZERO); Serial.print(" ");
     }
-    Serial.println("");
+    //Serial.println("");
   } else {
-    Serial.println("TRIMS:unset");
+    //Serial.println("TRIMS:unset");
     // init trim values to zero, no trim
     for (int i = 0; i < NUM_LEGS*2; i++) {
       ServoTrim[i] = TRIM_ZERO;   // this is the middle of the trim range and will result in no trim
     }
-  }
-  
-  // make a characteristic flashing pattern to indicate the robot code is loaded (as opposed to the gamepad)
-  // There will be a brief flash after hitting the RESET button, then a long flash followed by a short flash.
-  // The gamepaid is brief flash on reset, short flash, long flash.
-  pinMode(13, OUTPUT);
-  digitalWrite(13, HIGH);
-  delay(300);
-  digitalWrite(13, LOW);
-  delay(150);
-  digitalWrite(13, HIGH);
-  delay(150);
-  digitalWrite(13,LOW);
-  ///////////////////// end of indicator flashing
-  pinMode(A1, OUTPUT);
-  pinMode(A2, OUTPUT);
-  pinMode(ServoTypeGroundPin, OUTPUT);    // will provide a ground for shunt on D6 to indicate digital servo mode
-  digitalWrite(ServoTypeGroundPin, LOW);
-  pinMode(ServoTypePin, INPUT_PULLUP);    // if high we default to analog servo mode, if pulled to ground
-                                          // (via a shunt to D6) then we'll double the PWM frequency for digital servos
-  
-  digitalWrite(13, LOW);
-  
-  // A1 and A2 provide power to the potentiometer
-  digitalWrite(A1, HIGH);
-  digitalWrite(A2, LOW);
-
-  delay(300); // give hardware a chance to come up and stabalize
-
-  BlueTooth.begin(38400);
-
-  BlueTooth.println("");
-  delay(250);
-  BlueTooth.println(Version);
-
-  delay(250);
-
-  if (digitalRead(ServoTypePin) == LOW) { // Analog servo mode
-    FreqMult = 3-FreqMult;  // If FreqMult was 1, this makes it 2. If it was 2, this makes it 1.
-                            // In this way the global default of 1 or 2 will reverse if the shunt
-                            // is on ServoTypePin
-  }
-                   
-  // Chirp a number of times equal to FreqMult so we confirm what servo mode is in use
-  for (int i = 0; i < FreqMult; i++) {
-    beep(800, 50);
-    delay(100);
   }
 
   resetServoDriver();
@@ -1609,10 +1548,7 @@ void setup() {
   
   delay(300);
   
-  //CmuCam5.init();   // we're still working out some issues with CmuCam5
-  
-  beep(400); // Signals end of startup sequence
-
+ 
   yield();
 }
 
@@ -2451,38 +2387,21 @@ void loop() {
   checkForSmoothMoves();
   
   ////////////////////
-  int p = analogRead(A0);
   int factor = 1;
   
-  if (p < 50) {
+
     Dialmode = DIALMODE_STAND;
-  } else if (p < 150) {
-    Dialmode = DIALMODE_ADJUST;
-  } else if (p < 300) {
-    Dialmode = DIALMODE_TEST;
-  } else if (p < 750) {
-    Dialmode = DIALMODE_DEMO;
-  } else if (p < 950) {
-    Dialmode = DIALMODE_RC_GRIPARM;
-  } else {
-    Dialmode = DIALMODE_RC;
-  }
-
-  if (Dialmode != priorDialMode && priorDialMode != -1) {
-    beep(100+100*Dialmode,60);   // audio feedback that a new mode has been entered
-    SuppressModesUntil = millis() + 1000;
-  }
-  priorDialMode = Dialmode;
-
-  if (millis() < SuppressModesUntil) {
-    return;
-  }
+    //Dialmode = DIALMODE_ADJUST;
+    //Dialmode = DIALMODE_TEST;
+    //Dialmode = DIALMODE_DEMO;
+    //Dialmode = DIALMODE_RC_GRIPARM;
+    //Dialmode = DIALMODE_RC;
   
   //Serial.print("Analog0="); Serial.println(p);
   
   if (Dialmode == DIALMODE_STAND) { // STAND STILL MODE
     
-    digitalWrite(13, LOW);  // turn off LED13 in stand mode
+    //digitalWrite(13, LOW);  // turn off LED13 in stand mode
     //resetServoDriver();
     delay(250);
     stand();
@@ -2490,26 +2409,24 @@ void loop() {
     // in Stand mode we will also dump out all sensor values once per second to aid in debugging hardware issues
     if (millis() > ReportTime) {
           ReportTime = millis() + 1000;
-          Serial.println("Stand Mode, Sensors:");
-          Serial.print(" A3="); Serial.print(analogRead(A3));
-          Serial.print(" A6="); Serial.print(analogRead(A6));
-          Serial.print(" A7="); Serial.print(analogRead(A7));
-          Serial.print(" Dist="); Serial.print(readUltrasonic());
-          Serial.println("");
+          //Serial.println("Stand Mode, Sensors:");
+          //Serial.print(" A3="); Serial.print(analogRead(A3));
+          //Serial.print(" A6="); Serial.print(analogRead(A6));
+          //Serial.print(" A7="); Serial.print(analogRead(A7));
+          //Serial.print(" Dist="); Serial.print(readUltrasonic());
+          //Serial.println("");
     }
 
   } else if (Dialmode == DIALMODE_ADJUST) {  // Servo adjust mode, put all servos at 90 degrees
     
-    digitalWrite(13, flash(100));  // Flash LED13 rapidly in adjust mode
     stand_90_degrees();
 
     if (millis() > ReportTime) {
           ReportTime = millis() + 1000;
-          Serial.println("AdjustMode");
+          //Serial.println("AdjustMode");
     }
     
   } else if (Dialmode == DIALMODE_TEST) {   // Test each servo one by one
-    pinMode(13, flash(500));      // flash LED13 moderately fast in servo test mode
     
     for (int i = 0; i < 2*NUM_LEGS+NUM_GRIPSERVOS; i++) {
       p = analogRead(A0);
@@ -2525,25 +2442,23 @@ void loop() {
       delay(500);
       setServo(i, 90);
       delay(100);
-      Serial.print("SERVO: "); Serial.println(i);
+      //Serial.print("SERVO: "); Serial.println(i);
     }
     
   } else if (Dialmode == DIALMODE_DEMO) {  // demo mode
 
-    digitalWrite(13, flash(2000));  // flash LED13 very slowly in demo mode
     random_gait(timingfactor);
     if (millis() > ReportTime) {
           ReportTime = millis() + 1000;
-          Serial.println("Demo Mode");
+          //Serial.println("Demo Mode");
     }
     return;
 
   } else { // bluetooth mode (regardless of whether it's with or without the grip arm)
 
-    digitalWrite(13, HIGH);   // LED13 is set to steady on in bluetooth mode
     if (millis() > ReportTime) {
           ReportTime = millis() + 2000;
-          Serial.print("RC Mode:"); Serial.print(ServosDetached); Serial.write(lastCmd); Serial.write(mode); Serial.write(submode); Serial.println("");
+          //Serial.print("RC Mode:"); Serial.print(ServosDetached); Serial.write(lastCmd); Serial.write(mode); Serial.write(submode); Serial.println("");
     }
     int gotnewdata = receiveDataHandler();  // handle any new incoming data first
     //Serial.print(gotnewdata); Serial.print(" ");
